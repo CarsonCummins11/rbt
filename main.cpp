@@ -15,6 +15,16 @@ struct node{
 	node* parent;
 	bool red;
 };
+void case1(node*);
+void case2(node*);
+void case3(node*);
+node* parent(node*);
+node* grandparent(node*);
+node* uncle(node*);
+void repair_tree(node*);
+node* sibling(node*);
+void rotate_left(node* n);
+
 //print the heap
 //thanks https://www.geeksforgeeks.org/print-binary-tree-2-dimensions/
 // I had my own but it made no sense so I thought this one looked better
@@ -40,8 +50,27 @@ void print(node * root, int space){
     // Process left child
     print(root->left, space);
 }
-void fix(node*& n){
-	
+node* parent(node* n){
+	return n->parent;
+}
+node* uncle(node* n){
+	node * p = parent(n);
+	node * g = grandparent(n);
+	if(!g){
+		return NULL;
+	}
+	return sibling(p);
+}
+node* sibling(node* n){
+	node * p = parent(n);
+	if(p == NULL){
+		return NULL;
+	}
+	if(n==p->left){
+		return p->right;
+	}else{
+		return p->left;
+	}
 }
 //add to then end of the bst regardless of node value
 void add (node*& head, node* toadd){
@@ -75,36 +104,6 @@ void rotate_right(node* n){
 	newn->parent = n->parent;
 	n->parent = newn;
 }
-node* parent(node* n){
-	return n->parent;
-}
-node* uncle(node* n){
-	node * p = parent(n);
-	node * g = grandparent(n);
-	if(!g){
-		return NULL;
-	}
-	return sibling(p);
-}
-node* sibling(node* n){
-	node * p = parent(n);
-	if(p == NULL){
-		return NULL;
-	}
-	if(n==p->left){
-		return p->right;
-	}else{
-		return p->left;
-	}
-}
-void insert(node*& root, node* n){
-	insert_r(root,n);
-	repair_tree(n);
-	root = n;
-	while(parent(root)){
-		root = paent(root);
-	}
-}
 void insert_r(node* & root, node* n){
 	if(root&&n->data<root->data){
 	if(root->left){	
@@ -126,15 +125,24 @@ n->left = NULL;
 n->right = NULL;
 n->red = true; 
 }
+void insert(node*& root, node* n){
+	insert_r(root,n);
+	repair_tree(n);
+	root = n;
+	while(parent(root)){
+		root = parent(root);
+	}
+}
+
 void repair_tree(node* n){
 	if(!parent(n)){
 		case1(n);
 	}else if(!parent(n)->red){
 		return;
 	}else if(uncle(n)->red){
-		case3(n);
+		case2(n);
 	}else{
-		case4(n);
+		case3(n);
 	}
 }
 void case1(node* n){
@@ -152,7 +160,7 @@ void case3(node* n){
 	node* p = parent(n);
 	node* g = grandparent(g);
 	if(n==g->left->right){
-	roatate_left(p);
+	rotate_left(p);
 	n = n->left;
 	}else if(n == g->right->left){
 		rotate_right(p);
@@ -220,8 +228,7 @@ int main(){
 			ad->data = inn;
 			ad->left = NULL;
 			ad->right = NULL;
-			add(head,ad);
-			fix(head);
+			insert(head,ad);
 			print(head,0);
 			}else if(c=='R'){
 				cout << "input the node to delete" << endl;
@@ -248,7 +255,7 @@ int main(){
 			ad->data = x;
 			ad->left = NULL;
 			ad->right = NULL;
-			add(head,ad);
+			insert(head,ad);
 	}
 		print(head,0);
 		while(true){
@@ -272,7 +279,6 @@ int main(){
 				int inn;
 				cin>>inn;
 				remove(head,inn);
-				fix(head);
 				print(head,0);
 			}else{
 				cout << "not a valid command" << endl;
