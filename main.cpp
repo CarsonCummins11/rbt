@@ -6,6 +6,7 @@ This emulates a binary search tree
  */
 #include <iostream>
 #include<fstream>
+#include<stdlib.h>
 using namespace std;
 //node structure
 struct node{
@@ -135,11 +136,12 @@ void insert(node*& root, node* n){
 }
 
 void repair_tree(node* n){
+	
 	if(!parent(n)){
 		case1(n);
 	}else if(!parent(n)->red){
 		return;
-	}else if(uncle(n)->red){
+	}else if(uncle(n)&&uncle(n)->red){
 		case2(n);
 	}else{
 		case3(n);
@@ -158,22 +160,23 @@ void case2(node* n){
 }
 void case3(node* n){
 	node* p = parent(n);
-	node* g = grandparent(g);
-	if(n==g->left->right){
+	node* g = grandparent(n);
+	if(g->left&&n==g->left->right){
 	rotate_left(p);
 	n = n->left;
 	}else if(n == g->right->left){
 		rotate_right(p);
 		n = n->right;
 	}
+	p->red = false;
+	g->red = true;
 	if(n==p->left){
 		rotate_right(g);
 	}else{
 		rotate_left(g);
-		p->red = false;
-		g->red = true;
 	}
 }
+/*
 //remove first occurence of that number
 void remove(node*& head, int dat){
 	if(dat==head->data){
@@ -206,6 +209,7 @@ void remove(node*& head, int dat){
 		}
 	}
 }
+*/
 //take in data and process
 int main(){
 	cout << "1: enter numbers, 2: enter file path" <<endl;
@@ -215,7 +219,7 @@ int main(){
 	  //user chose to input numms
 	  node * head = NULL;
 			while(true){
-			cout << "Quit (Q), Insert (I), Remove(R)" << endl;
+			cout << "Quit (Q), Insert (I)" << endl;
 			char c;
 			cin >> c;
 			if(c=='Q'){
@@ -230,12 +234,6 @@ int main(){
 			ad->right = NULL;
 			insert(head,ad);
 			print(head,0);
-			}else if(c=='R'){
-				cout << "input the node to delete" << endl;
-				int inn;
-				cin>>inn;
-				remove(head,inn);
-				print(head,0);
 			}else{
 				cout << "not a valid command" << endl;
 			}
@@ -250,7 +248,10 @@ int main(){
 	infile.open(path);
 	node * head = NULL;
 	int x;
-	while(infile >> x){
+	const int MAXSIZE = 5;
+	char thisVal[MAXSIZE];
+	while(infile.getline(thisVal,MAXSIZE,',')){
+		x = atoi(thisVal);
 		node* ad = new node;
 			ad->data = x;
 			ad->left = NULL;
@@ -259,7 +260,7 @@ int main(){
 	}
 		print(head,0);
 		while(true){
-			cout << "Quit (Q), Insert (I), Remove(R)" << endl;
+			cout << "Quit (Q), Insert (I)" << endl;
 			char c;
 			cin >> c;
 			if(c=='Q'){
@@ -272,14 +273,8 @@ int main(){
 			ad->data = inn;
 			ad->left = NULL;
 			ad->right = NULL;
-			add(head,ad);
+			insert(head,ad);
 			print(head,0);
-			}else if(c=='R'){
-				cout << "input the node to delete" << endl;
-				int inn;
-				cin>>inn;
-				remove(head,inn);
-				print(head,0);
 			}else{
 				cout << "not a valid command" << endl;
 			}
