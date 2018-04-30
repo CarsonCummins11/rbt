@@ -17,14 +17,14 @@ struct node{
 	bool red;
 };
 void case1(node*);
-void case2(node*);
-void case3(node*);
+void case2(node*&,node*);
+void case3(node*&,node*);
 node* parent(node*);
 node* grandparent(node*);
 node* uncle(node*);
-void repair_tree(node*);
+void repair_tree(node*&,node*);
 node* sibling(node*);
-void rotate_left(node* n);
+void rotate_left(node*&,node* n);
 
 //print the heap
 //thanks https://www.geeksforgeeks.org/print-binary-tree-2-dimensions/
@@ -46,7 +46,15 @@ void print(node * root, int space){
     printf("\n");
     for (int i = 10; i < space; i++)
         printf(" "); 
-    printf("%d\n", root->data);
+    printf("%d", root->data);
+	if(root->red)
+	{
+		cout << "R\n";
+	}
+	else
+	{
+		cout << "B\n";
+	}
  
     // Process left child
     print(root->left, space);
@@ -73,17 +81,6 @@ node* sibling(node* n){
 		return p->left;
 	}
 }
-//add to then end of the bst regardless of node value
-void add (node*& head, node* toadd){
-	 if (!head){ 
-    head = toadd;
-	 }
-  else if (toadd->data < head->data){
-   add(head->left,toadd);
-  }else{
-    add(head->right,toadd);
-  }
-}
 node* grandparent(node* n){
 	node* p = parent(n);
 	if(p){
@@ -91,60 +88,98 @@ node* grandparent(node* n){
 	}
 	return NULL;
 }
-void rotate_left(node* n){
+void rotate_left(node*& head, node* n){
 	node* newn = n->right;
+	if(newn){
 	n->right = newn->left;
-	newn->left = n;
+	newn->left=n;
 	newn->parent = n->parent;
 	n->parent = newn;
+	if(newn->parent&&newn->parent->left==n){
+		newn->parent->left=newn;
+	}
+	else if(newn->parent&&newn->parent->right==n){
+		newn->parent->right=newn;
+	}
+	if(n==head){
+		head=newn;
+		head->red=false;
+	}
+	}
 }
-void rotate_right(node* n){
+void rotate_right(node*& head,node* n){
 	node * newn = n->left;
+	if(newn){
+		if(n->parent&&n==n->parent->left){
+			n->parent->left = n->left;
+		}else if(n->parent&&n==n->parent->right){
+			n->parent->right = n->left;
+		}
 	n->left = newn->right;
+	if(newn->right){
+		newn->right->parent = n;
+	}
 	newn->right = n;
 	newn->parent = n->parent;
 	n->parent = newn;
+	
+	if(n==head){
+		head = newn;
+		head->red = false;
+	}
+	}
 }
 void insert_r(node* & root, node* n){
-	if(root&&n->data<root->data){
+	if(!root){
+		root=n;
+		n->parent = NULL;
+		n->left = NULL;
+		n->right = NULL;
+		n->red = true;
+	}else if(root&&n->data<root->data){
 	if(root->left){	
 		insert_r(root->left,n);
 		return;
 	}else{
 		root->left=n;
+		n->parent = root;
+		n->left = NULL;
+		n->right = NULL;
+		n->red = true;
 	}
-}else if(root!=NULL){
+}else{
 	if(root->right){
 		insert_r(root->right,n);
 		return;
 	}else{
 		root->right = n;
+		n->parent = root;
+		n->left = NULL;
+		n->right = NULL;
+		n->red = true;
 	}
 }
-n->parent = root;
-n->left = NULL;
-n->right = NULL;
-n->red = true; 
 }
-void insert(node*& root, node* n){
+node* insert(node*& root, node* n){
 	insert_r(root,n);
-	repair_tree(n);
+	repair_tree(root,n);
 	root = n;
 	while(parent(root)){
 		root = parent(root);
 	}
+	return root;
 }
 
-void repair_tree(node* n){
+void repair_tree(node*&head,node* n){
 	
 	if(!parent(n)){
 		case1(n);
 	}else if(!parent(n)->red){
 		return;
 	}else if(uncle(n)&&uncle(n)->red){
-		case2(n);
+		case2(head,n);
 	}else{
-		case3(n);
+		case3(head,n);
 	}
 }
 void case1(node* n){
@@ -152,64 +187,32 @@ void case1(node* n){
 		n->red = false;
 	}
 }
-void case2(node* n){
+void case2(node*&head,node* n){
 	parent(n)->red = false;
 	uncle(n)->red = false;
 	grandparent(n)->red = true;
-	repair_tree(grandparent(n));
+	repair_tree(head,grandparent(n));
 }
-void case3(node* n){
+void case3(node*& head,node* n){
 	node* p = parent(n);
 	node* g = grandparent(n);
 	if(g->left&&n==g->left->right){
-	rotate_left(p);
+	rotate_left(head,p);
 	n = n->left;
-	}else if(n == g->right->left){
-		rotate_right(p);
+	}else if(g->right&&n == g->right->left){
+		rotate_right(head,p);
 		n = n->right;
+	}
+	 p = parent(n);
+	 g = grandparent(n);
+	if(n==p->left){
+		rotate_right(head,g);
+	}else{
+		rotate_left(head,g);
 	}
 	p->red = false;
 	g->red = true;
-	if(n==p->left){
-		rotate_right(g);
-	}else{
-		rotate_left(g);
-	}
 }
-/*
-//remove first occurence of that number
-void remove(node*& head, int dat){
-	if(dat==head->data){
-	if(head->left&&head->right){
-		node* succ = head->right;
-		node* psucc = head;
-		if(!succ->left){
-			head->data = succ->data;
-			head->right = succ->right;
-			return;
-		}
-		while(succ->left){
-			psucc = succ;
-			succ = succ->left;
-		}
-		head->data = succ->data;
-		psucc->left = succ->right;
-	}else if(!(head->left||head->right)){
-		head=NULL;
-	}else if(head->right&&!head->left){
-		head = head->right;
-	}else if(head->left&&!head->right){
-		head = head->left;
-	}
-	}else{
-		if(dat<head->data){
-			remove(head->left,dat);
-		}else{
-			remove(head->right,dat);
-		}
-	}
-}
-*/
 //take in data and process
 int main(){
 	cout << "1: enter numbers, 2: enter file path" <<endl;
@@ -256,7 +259,7 @@ int main(){
 			ad->data = x;
 			ad->left = NULL;
 			ad->right = NULL;
-			insert(head,ad);
+			head = insert(head,ad);
 	}
 		print(head,0);
 		while(true){
@@ -273,7 +276,7 @@ int main(){
 			ad->data = inn;
 			ad->left = NULL;
 			ad->right = NULL;
-			insert(head,ad);
+			head = insert(head,ad);
 			print(head,0);
 			}else{
 				cout << "not a valid command" << endl;
