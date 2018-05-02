@@ -22,7 +22,7 @@ void case3(node*&,node*);
 node* parent(node*);
 node* grandparent(node*);
 node* uncle(node*);
-void repair_tree(node*&,node*);
+void repair_tree_insert(node*&,node*);
 node* sibling(node*);
 void rotate_left(node*&,node* n);
 
@@ -162,15 +162,68 @@ void insert_r(node* & root, node* n){
 }
 node* insert(node*& root, node* n){
 	insert_r(root,n);
-	repair_tree(root,n);
+	repair_tree_insert(root,n);
 	root = n;
 	while(parent(root)){
 		root = parent(root);
 	}
 	return root;
 }
+void replace_node(node* n, node* child){
+	child->parent = n->parent;
+	if(n==n->parent->left){
+		child->parent->left=child;
+	}else{
+		child->parent->right->child;
+	}
+}
+void delete_one_child(node* n){
+	node* child = !n->right?n->left:n->right;
+	replace_node(n,child);
+	if(!n->red){
+		if(child->red){
+			child->red = false;
+		}else{
+			delete_case1(child);
+		}
+	}
+	delete n;
+}
+void printIfInTree(int dat,node* root){
+	if(root){
+	if(root->data==dat){
+		cout <<"in tree"<<endl;
+	}else{
+		printIfInTree(dat,root->left);
+		printIfInTree(dat,root->right);
+	}
+	}
+	
+}
+void delete_case3(node* n){
+	node * s = sibling(n);
+	if(!n->parent->red&&!s->red&&!s->left->red){
+		
+	}
+}
+void delete_case2(node* n){
+	node * s = sibling(n);
+	if(s->red){
+		n->parent->red = true;
+		s->red = false;
+		if(n==n->parent->left){
+			rotate_left(n->parent);
+		}else{
+			rotate_right(n->parent);
+		}
+	}
+	delete_case3(n);
+}
+void delete_case1(node * n){
+	if(n->parent) delete_case2(n);
+}
 
-void repair_tree(node*&head,node* n){
+void repair_tree_insert(node*&head,node* n){
 	
 	if(!parent(n)){
 		case1(n);
@@ -191,7 +244,7 @@ void case2(node*&head,node* n){
 	parent(n)->red = false;
 	uncle(n)->red = false;
 	grandparent(n)->red = true;
-	repair_tree(head,grandparent(n));
+	repair_tree_insert(head,grandparent(n));
 }
 void case3(node*& head,node* n){
 	node* p = parent(n);
