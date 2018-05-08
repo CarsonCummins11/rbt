@@ -169,12 +169,16 @@ node* insert(node*& root, node* n){
 	}
 	return root;
 }
-void replace_node(node* n, node* child){
+void replace_node(node*& n, node* child){
 	child->parent = n->parent;
+	if(n->parent){
 	if(n==n->parent->left){
 		child->parent->left=child;
 	}else{
 		child->parent->right->child;
+	}
+	}else{
+		n = child;
 	}
 }
 void delete_one_child(node* n){
@@ -189,21 +193,65 @@ void delete_one_child(node* n){
 	}
 	delete n;
 }
-void printIfInTree(int dat,node* root){
-	if(root){
-	if(root->data==dat){
-		cout <<"in tree"<<endl;
-	}else{
-		printIfInTree(dat,root->left);
-		printIfInTree(dat,root->right);
+node * getNode(node* r, int d){
+	if(!r){
+		return NULL;
 	}
+	if(r->data==d){
+		return r;
+	}
+	return getNode(r->left,d)?getNode(r->left,d):getNode(r->right,d); 
+		
+}
+void printIfInTree(int dat,node* root){
+	if(getNode(root,dat)){
+		cout << "That is in the tree" << endl;
 	}
 	
 }
+void delete_case6(node* n){
+	node* s = sibling(n);
+	s->red = n->parent->color;
+	n->parent->red = false;
+	if(n==n->parent->left){
+		s->right->red = false;
+		rotate_left(n->parent);
+	}else{
+		s->left->red = false;
+		rotate_right(n->parent);
+	}
+}
+void delete_case5(node* n){
+	node* s = sibling(n);
+	if(!s->red){
+		if(n==n->parent->left && !s->right->red && s->left->red){
+			s->red = true;
+			s->left->red = false;
+			rotate_right(s);
+		}else if(n==n->parent->right && !s->left->red &&s->right->red){
+			s->red = true;
+			s->right->red = false;
+			rotate_left(s);
+		}
+	}
+	delete_case6(n);
+}
+void delete_case4(node* n){
+	node* s = sibling(s);
+	if(n->parent->red&&!s->red&&!s->left->red&&!s->right->red){
+			s->red = true;
+			n->parent->red = false;
+	}else{
+		delete_case5(node* n);
+	}
+}
 void delete_case3(node* n){
 	node * s = sibling(n);
-	if(!n->parent->red&&!s->red&&!s->left->red){
-		
+	if(!n->parent->red&&!s->red&&!s->left->red&&!s->right->red){
+		s->red = true;
+		delete_case1(n->parent);
+	}else{
+		delete_case4(n);
 	}
 }
 void delete_case2(node* n){
@@ -266,6 +314,12 @@ void case3(node*& head,node* n){
 	p->red = false;
 	g->red = true;
 }
+
+void delNode( node* del){
+	if(del->left^del->right){
+		delete_one_child(del);
+	}
+}
 //take in data and process
 int main(){
 	cout << "1: enter numbers, 2: enter file path" <<endl;
@@ -275,7 +329,7 @@ int main(){
 	  //user chose to input numms
 	  node * head = NULL;
 			while(true){
-			cout << "Quit (Q), Insert (I)" << endl;
+			cout << "Quit (Q), Insert (I), Delete (D)" << endl;
 			char c;
 			cin >> c;
 			if(c=='Q'){
@@ -290,6 +344,16 @@ int main(){
 			ad->right = NULL;
 			insert(head,ad);
 			print(head,0);
+			}else if(c=='D'){
+				cout << "input #" << endl;
+				int inn;
+				cin>>inn;
+				node* del = getNode(head);
+				if(!del){
+					cout << "that don't exist fam" << endl;
+				}else{
+					delNode(del);
+				}
 			}else{
 				cout << "not a valid command" << endl;
 			}
