@@ -16,6 +16,7 @@ struct node{
 	node* parent;
 	bool red;
 };
+void delete_case1(node*& head,node * n);
 void case1(node*);
 void case2(node*&,node*);
 void case3(node*&,node*);
@@ -175,20 +176,20 @@ void replace_node(node*& n, node* child){
 	if(n==n->parent->left){
 		child->parent->left=child;
 	}else{
-		child->parent->right->child;
+		child->parent->right=child;
 	}
 	}else{
 		n = child;
 	}
 }
-void delete_one_child(node* n){
+void delete_one_child(node*& head,node* n){
 	node* child = !n->right?n->left:n->right;
 	replace_node(n,child);
 	if(!n->red){
 		if(child->red){
 			child->red = false;
 		}else{
-			delete_case1(child);
+			delete_case1(head,child);
 		}
 	}
 	delete n;
@@ -209,66 +210,66 @@ void printIfInTree(int dat,node* root){
 	}
 	
 }
-void delete_case6(node* n){
+void delete_case6(node*& head,node* n){
 	node* s = sibling(n);
-	s->red = n->parent->color;
+	s->red = n->parent->red;
 	n->parent->red = false;
 	if(n==n->parent->left){
 		s->right->red = false;
-		rotate_left(n->parent);
+		rotate_left(head,n->parent);
 	}else{
 		s->left->red = false;
-		rotate_right(n->parent);
+		rotate_right(head,n->parent);
 	}
 }
-void delete_case5(node* n){
+void delete_case5(node*& head,node* n){
 	node* s = sibling(n);
 	if(!s->red){
 		if(n==n->parent->left && !s->right->red && s->left->red){
 			s->red = true;
 			s->left->red = false;
-			rotate_right(s);
+			rotate_right(head,s);
 		}else if(n==n->parent->right && !s->left->red &&s->right->red){
 			s->red = true;
 			s->right->red = false;
-			rotate_left(s);
+			rotate_left(head,s);
 		}
 	}
-	delete_case6(n);
+	delete_case6(head,n);
 }
-void delete_case4(node* n){
+void delete_case4(node*& head,node* n){
 	node* s = sibling(s);
 	if(n->parent->red&&!s->red&&!s->left->red&&!s->right->red){
 			s->red = true;
 			n->parent->red = false;
 	}else{
-		delete_case5(node* n);
+		delete_case5(head,n);
 	}
 }
-void delete_case3(node* n){
+void delete_case3(node*& head,node* n){
 	node * s = sibling(n);
 	if(!n->parent->red&&!s->red&&!s->left->red&&!s->right->red){
 		s->red = true;
-		delete_case1(n->parent);
+		delete_case1(head,n->parent);
 	}else{
-		delete_case4(n);
+		delete_case4(head,n);
 	}
 }
-void delete_case2(node* n){
+void delete_case2(node*& head, node* n){
 	node * s = sibling(n);
 	if(s->red){
 		n->parent->red = true;
 		s->red = false;
 		if(n==n->parent->left){
-			rotate_left(n->parent);
+			rotate_left(head,n->parent);
 		}else{
-			rotate_right(n->parent);
+			rotate_right(head,n->parent);
 		}
 	}
-	delete_case3(n);
+	delete_case3(head,n);
 }
-void delete_case1(node * n){
-	if(n->parent) delete_case2(n);
+void delete_case1(node*& head,node * n){
+	if(n->parent) delete_case2(head,n);
 }
 
 void repair_tree_insert(node*&head,node* n){
@@ -314,10 +315,22 @@ void case3(node*& head,node* n){
 	p->red = false;
 	g->red = true;
 }
-
-void delNode( node* del){
-	if(del->left^del->right){
-		delete_one_child(del);
+node* find_in_order(node* head){
+	if(head->left){
+		return find_in_order(head->left);
+	}else{
+		return head;
+	}
+}
+void delNode(node*& head, node* del){
+	if(((del->left)&&(!del->right))||((!del->left)&&(del->right))){
+		delete_one_child(head,del);
+	}else if(del->left&&del->right){
+		node* k = find_in_order(del->right);
+		del->data = k->data;
+		delNode(head,k);
+	}else{
+		delete del;
 	}
 }
 //take in data and process
@@ -348,11 +361,11 @@ int main(){
 				cout << "input #" << endl;
 				int inn;
 				cin>>inn;
-				node* del = getNode(head);
+				node* del = getNode(head,inn);
 				if(!del){
 					cout << "that don't exist fam" << endl;
 				}else{
-					delNode(del);
+					delNode(head,del);
 				}
 			}else{
 				cout << "not a valid command" << endl;
@@ -395,6 +408,16 @@ int main(){
 			ad->right = NULL;
 			head = insert(head,ad);
 			print(head,0);
+			}else if(c=='D'){
+				cout << "input #" << endl;
+				int inn;
+				cin>>inn;
+				node* del = getNode(head,inn);
+				if(!del){
+					cout << "that don't exist fam" << endl;
+				}else{
+					delNode(head,del);
+				}
 			}else{
 				cout << "not a valid command" << endl;
 			}
