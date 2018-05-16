@@ -92,10 +92,10 @@ node* grandparent(node* n){
 void rotate_left(node*& head, node* n){
 	node* newn = n->right;
 	if(newn){
-	n->right = newn->left;
-	newn->left=n;
-	newn->parent = n->parent;
-	n->parent = newn;
+		n->right = newn->left;
+		newn->left=n;
+		newn->parent = n->parent;
+		n->parent = newn;
 	if(newn->parent&&newn->parent->left==n){
 		newn->parent->left=newn;
 	}
@@ -171,6 +171,7 @@ node* insert(node*& root, node* n){
 	return root;
 }
 void replace_node(node*& n, node* child){
+	if(!child)return;
 	child->parent = n->parent;
 	if(n->parent){
 	if(n==n->parent->left){
@@ -182,17 +183,20 @@ void replace_node(node*& n, node* child){
 		n = child;
 	}
 }
-void delete_one_child(node*& head,node* n){
-	node* child = !n->right?n->left:n->right;
-	replace_node(n,child);
-	if(!n->red){
-		if(child->red){
-			child->red = false;
-		}else{
-			delete_case1(head,child);
-		}
+void free(node*& n){
+	if(n->parent->left  == n){
+	n->parent->left = NULL;
+	}else if(n->parent->right==n){
+	n->parent->right = NULL;	
 	}
 	delete n;
+	n= NULL;
+}
+void delete_one_child(node*& head,node*& n){
+	delete_case1(head,n);
+	node* child = !n->right?n->left:n->right;
+	replace_node(n,child);
+	free(n);
 }
 node * getNode(node* r, int d){
 	if(!r){
@@ -215,23 +219,23 @@ void delete_case6(node*& head,node* n){
 	s->red = n->parent->red;
 	n->parent->red = false;
 	if(n==n->parent->left){
-		s->right->red = false;
+		if(s->right)s->right->red = false;
 		rotate_left(head,n->parent);
 	}else{
-		s->left->red = false;
+		if(s->left)s->left->red = false;
 		rotate_right(head,n->parent);
 	}
 }
 void delete_case5(node*& head,node* n){
 	node* s = sibling(n);
 	if(!s->red){
-		if(n==n->parent->left && !s->right->red && s->left->red){
-			s->red = true;
-			s->left->red = false;
+		if(n==n->parent->left && (!s||(!s->right||!s->right->red)) && (s&&(s->left&&s->left->red))){
+			if(s)s->red = true;
+			if(s->left)s->left->red = false;
 			rotate_right(head,s);
-		}else if(n==n->parent->right && !s->left->red &&s->right->red){
-			s->red = true;
-			s->right->red = false;
+		}else if(n==n->parent->right && (!s||(!s->right||!s->right->red)) && (s&&(s->left&&s->left->red))){
+			if(s)s->red = true;
+			if(s->right)s->right->red = false;
 			rotate_left(head,s);
 		}
 	}
@@ -239,8 +243,8 @@ void delete_case5(node*& head,node* n){
 }
 void delete_case4(node*& head,node* n){
 	node* s = sibling(s);
-	if(n->parent->red&&!s->red&&!s->left->red&&!s->right->red){
-			s->red = true;
+	if(n->parent->red&&(!s||!s->red)&&(!s||(s&&(!s->left||!s->left->red)))&&(!s||(s&&(!s->right||!s->right->red)))){
+			if(s)s->red = true;
 			n->parent->red = false;
 	}else{
 		delete_case5(head,n);
@@ -248,8 +252,8 @@ void delete_case4(node*& head,node* n){
 }
 void delete_case3(node*& head,node* n){
 	node * s = sibling(n);
-	if(!n->parent->red&&!s->red&&!s->left->red&&!s->right->red){
-		s->red = true;
+	if(!n->parent->red&&(!s||!s->red)&&(!s||(!s->left||!s->left->red))&&(!s||(!s->right||!s->right->red))){
+		if(s)s->red = true;
 		delete_case1(head,n->parent);
 	}else{
 		delete_case4(head,n);
@@ -257,7 +261,7 @@ void delete_case3(node*& head,node* n){
 }
 void delete_case2(node*& head, node* n){
 	node * s = sibling(n);
-	if(s->red){
+	if(s&&s->red){
 		n->parent->red = true;
 		s->red = false;
 		if(n==n->parent->left){
@@ -322,15 +326,13 @@ node* find_in_order(node* head){
 		return head;
 	}
 }
-void delNode(node*& head, node* del){
-	if(((del->left)&&(!del->right))||((!del->left)&&(del->right))){
-		delete_one_child(head,del);
-	}else if(del->left&&del->right){
+void delNode(node*& head, node*& del){
+	if(del->left&&del->right){
 		node* k = find_in_order(del->right);
 		del->data = k->data;
 		delNode(head,k);
 	}else{
-		delete del;
+		delete_one_child(head,del);
 	}
 }
 //take in data and process
@@ -367,6 +369,7 @@ int main(){
 				}else{
 					delNode(head,del);
 				}
+				print(head,0);
 			}else{
 				cout << "not a valid command" << endl;
 			}
@@ -393,7 +396,7 @@ int main(){
 	}
 		print(head,0);
 		while(true){
-			cout << "Quit (Q), Insert (I)" << endl;
+			cout << "Quit (Q), Insert (I), Delete (D)" << endl;
 			char c;
 			cin >> c;
 			if(c=='Q'){
@@ -418,6 +421,7 @@ int main(){
 				}else{
 					delNode(head,del);
 				}
+				print(head,0);
 			}else{
 				cout << "not a valid command" << endl;
 			}
