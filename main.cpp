@@ -184,6 +184,7 @@ void replace_node(node*& n, node* child){
 	}
 }
 void free(node*& n){
+	cout << n->parent->data <<endl;
 	if(n->parent->left  == n){
 	n->parent->left = NULL;
 	}else if(n->parent->right==n){
@@ -216,26 +217,26 @@ void printIfInTree(int dat,node* root){
 }
 void delete_case6(node*& head,node* n){
 	node* s = sibling(n);
-	s->red = n->parent->red;
-	n->parent->red = false;
+	if(s)s->red = (n&&n->parent)?n->parent->red:false;
+	if(n&&n->parent)n->parent->red = false;
 	if(n==n->parent->left){
-		if(s->right)s->right->red = false;
+		if(s&&s->right)s->right->red = false;
 		rotate_left(head,n->parent);
 	}else{
-		if(s->left)s->left->red = false;
+		if(s&&s->left)s->left->red = false;
 		rotate_right(head,n->parent);
 	}
 }
 void delete_case5(node*& head,node* n){
 	node* s = sibling(n);
-	if(!s->red){
+	if(!s||!s->red){
 		if(n==n->parent->left && (!s||(!s->right||!s->right->red)) && (s&&(s->left&&s->left->red))){
 			if(s)s->red = true;
-			if(s->left)s->left->red = false;
+			if(s&&s->left)s->left->red = false;
 			rotate_right(head,s);
 		}else if(n==n->parent->right && (!s||(!s->right||!s->right->red)) && (s&&(s->left&&s->left->red))){
 			if(s)s->red = true;
-			if(s->right)s->right->red = false;
+			if(s&&s->right)s->right->red = false;
 			rotate_left(head,s);
 		}
 	}
@@ -243,9 +244,10 @@ void delete_case5(node*& head,node* n){
 }
 void delete_case4(node*& head,node* n){
 	node* s = sibling(s);
-	if(n->parent->red&&(!s||!s->red)&&(!s||(s&&(!s->left||!s->left->red)))&&(!s||(s&&(!s->right||!s->right->red)))){
+	if(n->parent->red&&(!s||!s->red)&&(!s||(s&&(!s->left||!s->left->red)))&&
+	(!s||(s&&(!s->right||!s->right->red)))){
 			if(s)s->red = true;
-			n->parent->red = false;
+			if(n&&n->parent)n->parent->red = false;
 	}else{
 		delete_case5(head,n);
 	}
@@ -270,7 +272,7 @@ void delete_case2(node*& head, node* n){
 			rotate_right(head,n->parent);
 		}
 	}
-	delete_case3(head,n);
+	if(s)delete_case3(head,n);
 }
 void delete_case1(node*& head,node * n){
 	if(n->parent) delete_case2(head,n);
