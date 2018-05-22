@@ -26,6 +26,7 @@ node* uncle(node*);
 void repair_tree_insert(node*&,node*);
 node* sibling(node*);
 void rotate_left(node*&,node* n);
+bool isBlack(node*);
 
 //print the heap
 //thanks https://www.geeksforgeeks.org/print-binary-tree-2-dimensions/
@@ -170,17 +171,20 @@ node* insert(node*& root, node* n){
 	}
 	return root;
 }
-void replace_node(node*& n, node* child){
-	if(!child)return;
-	child->parent = n->parent;
-	if(n->parent){
-	if(n==n->parent->left){
-		child->parent->left=child;
+node* replace(node*& old, node* torep){
+	if(!torep)return NULL;
+	if(old->parent){
+		torep->parent = old->parent;
+		if(old->parent->right==old)old->parent->right=torep;else old->parent->left = torep;
+		old->parent = NULL;
+		return old;
 	}else{
-		child->parent->right=child;
-	}
-	}else{
-		n = child;
+		old->data = torep->data;
+		old->left = torep->left;
+		old->right = torep->right;
+		if(old->left)old->left->parent = old;
+		if(old->right)old->left->parent = old;
+		return torep;
 	}
 }
 void free(node*& n){
@@ -191,13 +195,35 @@ void free(node*& n){
 	n->parent->right = NULL;	
 	}
 	delete n;
-	n= NULL;
 }
 void delete_one_child(node*& head,node*& n){
+	if(!n->left&&!n->right){
+		if(isBlack(n)){
+			delete_case1(head,n);
+		}
+		if(n->parent){
+			free(n);
+		}
+		if(n==head){
+			head = NULL;
+		}
+		return;
+	}
+	node* child = n->right?n->right:n->left;
+	if(n==head){
+	child->parent = NULL;
+	child->red = false;
+	head = child;
+	}
+	n = replace(n,child);
+	if(isBlack(n)){
+	if(!isBlack(child)){
+	child->red = false;
+	}else{
 	delete_case1(head,n);
-	node* child = !n->right?n->left:n->right;
-	replace_node(n,child);
-	free(n);
+	}
+	}
+	delete n;
 }
 node * getNode(node* r, int d){
 	if(!r){
@@ -215,28 +241,33 @@ void printIfInTree(int dat,node* root){
 	}
 	
 }
+bool isBlack(node* k){
+	if(!k)return true;
+	if(k->red)return false;
+	return true;
+}
 void delete_case6(node*& head,node* n){
 	node* s = sibling(n);
-	if(s)s->red = (n&&n->parent)?n->parent->red:false;
-	if(n&&n->parent)n->parent->red = false;
+	s->red = n->parent->red;
+	n->parent->red = false;
 	if(n==n->parent->left){
-		if(s&&s->right)s->right->red = false;
+		if(s->right)s->right->red = false;
 		rotate_left(head,n->parent);
 	}else{
-		if(s&&s->left)s->left->red = false;
+		if(s->left)s->left->red = false;
 		rotate_right(head,n->parent);
 	}
 }
 void delete_case5(node*& head,node* n){
 	node* s = sibling(n);
-	if(!s||!s->red){
-		if(n==n->parent->left && (!s||(!s->right||!s->right->red)) && (s&&(s->left&&s->left->red))){
-			if(s)s->red = true;
-			if(s&&s->left)s->left->red = false;
+	if(isBlack(s)){
+		if(n==n->parent->left &&!isBlack(s->left)&&isBlack(s->right)){
+			s->red = true;
+			s->left->red = false;
 			rotate_right(head,s);
-		}else if(n==n->parent->right && (!s||(!s->right||!s->right->red)) && (s&&(s->left&&s->left->red))){
-			if(s)s->red = true;
-			if(s&&s->right)s->right->red = false;
+		}else if(n==n->parent->right &&isBlack(s->left)&&!isBlack(s->right)){
+			s->red = true;
+			s->right->red = false;
 			rotate_left(head,s);
 		}
 	}
@@ -244,18 +275,17 @@ void delete_case5(node*& head,node* n){
 }
 void delete_case4(node*& head,node* n){
 	node* s = sibling(s);
-	if(n->parent->red&&(!s||!s->red)&&(!s||(s&&(!s->left||!s->left->red)))&&
-	(!s||(s&&(!s->right||!s->right->red)))){
-			if(s)s->red = true;
-			if(n&&n->parent)n->parent->red = false;
+	if(!isBlack(n->parent)&&isBlack(s)&&isBlack(s->left)&&isBlack(s->right)){
+			s->red = true;
+			n->parent->red = false;
 	}else{
 		delete_case5(head,n);
 	}
 }
 void delete_case3(node*& head,node* n){
 	node * s = sibling(n);
-	if(!n->parent->red&&(!s||!s->red)&&(!s||(!s->left||!s->left->red))&&(!s||(!s->right||!s->right->red))){
-		if(s)s->red = true;
+	if(isBlack(n->parent)&&isBlack(s)&&isBlack(s->left)&&isBlack(s->right)){
+		s->red = true;
 		delete_case1(head,n->parent);
 	}else{
 		delete_case4(head,n);
@@ -263,7 +293,7 @@ void delete_case3(node*& head,node* n){
 }
 void delete_case2(node*& head, node* n){
 	node * s = sibling(n);
-	if(s&&s->red){
+	if(!isBlack(s)){
 		n->parent->red = true;
 		s->red = false;
 		if(n==n->parent->left){
@@ -272,7 +302,7 @@ void delete_case2(node*& head, node* n){
 			rotate_right(head,n->parent);
 		}
 	}
-	if(s)delete_case3(head,n);
+	delete_case3(head,n);
 }
 void delete_case1(node*& head,node * n){
 	if(n->parent) delete_case2(head,n);
