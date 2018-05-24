@@ -135,7 +135,7 @@ void rotate_right(node*& head,node* n){
 	}
 }
 void insert_r(node* & root, node* n){
-	if(!root){
+if(!root){
 		root=n;
 		n->parent = NULL;
 		n->left = NULL;
@@ -348,8 +348,7 @@ void case3(node*& head,node* n){
 	}else{
 		rotate_left(head,g);
 	}
-	parent(n)->red = false;
-	n->red = true;
+	p->red = false;
 	g->red = true;
 }
 node* find_in_order(node* head){
