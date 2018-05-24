@@ -378,10 +378,15 @@ int main(){
 	  //user chose to input numms
 	  node * head = NULL;
 			while(true){
-			cout << "Quit (Q), Insert (I), Delete (D)" << endl;
+			cout << "Quit (Q), Insert (I), Delete (D), Search (S)" << endl;
 			char c;
 			cin >> c;
-			if(c=='Q'){
+			if(c=='S'){
+			int inn;
+			cout << "input #" << endl;
+			cin>>inn;
+			cout << (getNode(head,inn)==NULL?"not there":"there") << endl;
+			}else if(c=='Q'){
 				break;
 			}else if(c=='I'){
 				cout << "input #" << endl;
@@ -430,10 +435,15 @@ int main(){
 	}
 		print(head,0);
 		while(true){
-			cout << "Quit (Q), Insert (I), Delete (D)" << endl;
+			cout << "Quit (Q), Insert (I), Delete (D), Search (S)" << endl;
 			char c;
 			cin >> c;
-			if(c=='Q'){
+			if(c=='S'){
+			int inn;
+			cout << "input #" << endl;
+			cin>>inn;
+			cout << (getNode(head,inn)==NULL?"not there":"there") << endl;
+			}else if(c=='Q'){
 				break;
 			}else if(c=='I'){
 				cout << "input #" << endl;
