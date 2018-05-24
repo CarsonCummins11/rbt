@@ -74,7 +74,7 @@ node* uncle(node* n){
 }
 node* sibling(node* n){
 	node * p = parent(n);
-	if(p == NULL){
+	if(p == NULL || n==NULL){
 		return NULL;
 	}
 	if(n==p->left){
@@ -94,6 +94,7 @@ void rotate_left(node*& head, node* n){
 	node* newn = n->right;
 	if(newn){
 		n->right = newn->left;
+		if(newn->left)newn->left->parent = n;
 		newn->left=n;
 		newn->parent = n->parent;
 		n->parent = newn;
@@ -106,6 +107,7 @@ void rotate_left(node*& head, node* n){
 	if(n==head){
 		head=newn;
 		head->red=false;
+		head->parent = NULL;
 	}
 	}
 }
@@ -113,9 +115,9 @@ void rotate_right(node*& head,node* n){
 	node * newn = n->left;
 	if(newn){
 		if(n->parent&&n==n->parent->left){
-			n->parent->left = n->left;
+			n->parent->left = newn;
 		}else if(n->parent&&n==n->parent->right){
-			n->parent->right = n->left;
+			n->parent->right = newn;
 		}
 	n->left = newn->right;
 	if(newn->right){
@@ -128,6 +130,7 @@ void rotate_right(node*& head,node* n){
 	if(n==head){
 		head = newn;
 		head->red = false;
+		head->parent = NULL;
 	}
 	}
 }
@@ -171,8 +174,7 @@ node* insert(node*& root, node* n){
 	}
 	return root;
 }
-node* replace(node*& old, node* torep){
-	if(!torep)return NULL;
+node * replace(node*& old, node* torep){
 	if(old->parent){
 		torep->parent = old->parent;
 		if(old->parent->right==old)old->parent->right=torep;else old->parent->left = torep;
@@ -188,13 +190,12 @@ node* replace(node*& old, node* torep){
 	}
 }
 void free(node*& n){
-	cout << n->parent->data <<endl;
+	if(!n || !n->parent)return;
 	if(n->parent->left  == n){
 	n->parent->left = NULL;
 	}else if(n->parent->right==n){
 	n->parent->right = NULL;	
 	}
-	delete n;
 }
 void delete_one_child(node*& head,node*& n){
 	if(!n->left&&!n->right){
@@ -214,6 +215,7 @@ void delete_one_child(node*& head,node*& n){
 	child->parent = NULL;
 	child->red = false;
 	head = child;
+	return;
 	}
 	n = replace(n,child);
 	if(isBlack(n)){
@@ -223,7 +225,7 @@ void delete_one_child(node*& head,node*& n){
 	delete_case1(head,n);
 	}
 	}
-	delete n;
+	free(n);
 }
 node * getNode(node* r, int d){
 	if(!r){
@@ -232,7 +234,7 @@ node * getNode(node* r, int d){
 	if(r->data==d){
 		return r;
 	}
-	return getNode(r->left,d)?getNode(r->left,d):getNode(r->right,d); 
+	return d>r->data?getNode(r->right,d):getNode(r->left,d);
 		
 }
 void printIfInTree(int dat,node* root){
@@ -242,9 +244,7 @@ void printIfInTree(int dat,node* root){
 	
 }
 bool isBlack(node* k){
-	if(!k)return true;
-	if(k->red)return false;
-	return true;
+	if(!k)return true; else return !k->red;
 }
 void delete_case6(node*& head,node* n){
 	node* s = sibling(n);
@@ -274,7 +274,7 @@ void delete_case5(node*& head,node* n){
 	delete_case6(head,n);
 }
 void delete_case4(node*& head,node* n){
-	node* s = sibling(s);
+	node* s = sibling(n);
 	if(!isBlack(n->parent)&&isBlack(s)&&isBlack(s->left)&&isBlack(s->right)){
 			s->red = true;
 			n->parent->red = false;
@@ -348,7 +348,8 @@ void case3(node*& head,node* n){
 	}else{
 		rotate_left(head,g);
 	}
-	p->red = false;
+	parent(n)->red = false;
+	n->red = true;
 	g->red = true;
 }
 node* find_in_order(node* head){
@@ -361,7 +362,9 @@ node* find_in_order(node* head){
 void delNode(node*& head, node*& del){
 	if(del->left&&del->right){
 		node* k = find_in_order(del->right);
+		int temp = k->data;
 		del->data = k->data;
+		k->data = temp;
 		delNode(head,k);
 	}else{
 		delete_one_child(head,del);
